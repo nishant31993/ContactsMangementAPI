@@ -1,20 +1,22 @@
-﻿using ContactsMangementAPI.Services;
+﻿using ContactsMangementAPI.Handlers;
 using ContactsMangementAPI.Models;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 
 namespace ContactsMangementAPI.Services
 {
-    public class ContactService: IContactService
+    public class ContactService : IContactService
     {
+        private readonly IFileHandler _fileHandler;
         private const string FilePath = "contacts.json";
         private List<Contact> contacts;
 
-        public ContactService()
+        public ContactService(IFileHandler fileHandler)
         {
-            if (File.Exists(FilePath))
+            _fileHandler = fileHandler;
+            if (_fileHandler.Exists(FilePath))
             {
-                var json = File.ReadAllText(FilePath);
+                var json = _fileHandler.ReadAllText(FilePath);
                 contacts = JsonConvert.DeserializeObject<List<Contact>>(json) ?? new List<Contact>();
             }
             else
@@ -26,7 +28,7 @@ namespace ContactsMangementAPI.Services
         private void SaveChanges()
         {
             var json = JsonConvert.SerializeObject(contacts, Formatting.Indented);
-            File.WriteAllText(FilePath, json);
+            _fileHandler.WriteAllText(FilePath, json);
         }
 
         public List<Contact> GetContacts() => contacts;
@@ -38,7 +40,9 @@ namespace ContactsMangementAPI.Services
             if (contacts.Any(c => c.Email == contact.Email))
                 throw new InvalidOperationException("Email must be unique.");
 
-            contact.Id = contacts.Max(c => c.Id) + 1;
+            // If the contacts list is empty, set the ID to 1, otherwise assign the next ID.
+            contact.Id = contacts.Any() ? contacts.Max(c => c.Id) + 1 : 1;
+
             contacts.Add(contact);
             SaveChanges();
         }

@@ -1,5 +1,6 @@
 using ContactsMangementAPI.Services;
 using ContactsMangementAPI.Middleware;
+using ContactsMangementAPI.Handlers;
 
 internal class Program
 {
@@ -14,6 +15,7 @@ internal class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
         builder.Services.AddSingleton<IContactService, ContactService>();
+        builder.Services.AddSingleton<IFileHandler, FileHandler>();
 
         var app = builder.Build();
 
